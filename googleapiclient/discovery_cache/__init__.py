@@ -52,13 +52,14 @@ def autodetect():
         return None
 
 
-def get_static_doc(serviceName, version):
+def get_static_doc(serviceName, version, labels=None):
     """Retrieves the discovery document from the directory defined in
     DISCOVERY_DOC_DIR corresponding to the serviceName and version provided.
 
     Args:
         serviceName: string, name of the service.
         version: string, the version of the service.
+        labels: list of strings, optional visibility labels to filter by.
 
     Returns:
         A string containing the contents of the JSON discovery document,
@@ -66,7 +67,11 @@ def get_static_doc(serviceName, version):
     """
 
     content = None
-    doc_name = "{}.{}.json".format(serviceName, version)
+    if labels:
+        sorted_labels = sorted(list(labels))
+        doc_name = "{}.{}.{}.json".format(serviceName, version, "-".join(sorted_labels))
+    else:
+        doc_name = "{}.{}.json".format(serviceName, version)
 
     try:
         with open(os.path.join(DISCOVERY_DOC_DIR, doc_name), "r") as f:

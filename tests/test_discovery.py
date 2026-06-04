@@ -2630,6 +2630,49 @@ class Discovery(unittest.TestCase):
             request.headers["X-Goog-Visibilities"], "GOOGLE_INTERNAL,PREVIEW"
         )
 
+    @mock.patch("googleapiclient.discovery_cache.get_static_doc")
+    def test_static_discovery_with_labels(self, mock_get_static_doc):
+        mock_get_static_doc.return_value = read_datafile("zoo.json")
+
+        mock_http = mock.Mock()
+        mock_http.credentials = None
+
+        zoo = build(
+            "zoo",
+            "v1",
+            http=mock_http,
+            static_discovery=True,
+            labels=["PREVIEW", "GOOGLE_INTERNAL"],
+        )
+
+        # Verify that get_static_doc was called with the sorted labels
+        mock_get_static_doc.assert_called_once_with(
+            "zoo", "v1", labels=["GOOGLE_INTERNAL", "PREVIEW"]
+        )
+
+        # Verify HTTP was NOT called
+        mock_http.request.assert_not_called()
+
+        # Verify resource is built correctly and propagates labels to requests
+        request = zoo.animals().get(name="Lion")
+        self.assertEqual(
+            request.headers["X-Goog-Visibilities"], "GOOGLE_INTERNAL,PREVIEW"
+        )
+
+    @mock.patch("googleapiclient.discovery_cache.get_static_doc")
+    def test_static_discovery_with_labels_not_found(self, mock_get_static_doc):
+        mock_get_static_doc.return_value = None
+
+        with self.assertRaises(UnknownApiNameOrVersion):
+            build(
+                "zoo",
+                "v1",
+                static_discovery=True,
+                labels=["PREVIEW", "GOOGLE_INTERNAL"],
+            )
+
+
+
 
 class Next(unittest.TestCase):
     def test_next_successful_none_on_no_next_page_token(self):

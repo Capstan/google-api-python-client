@@ -265,9 +265,9 @@ def build(
         randomized exponential backoff in case of intermittent/connection issues.
       static_discovery: Boolean, whether or not to use the static discovery docs
         included in the library. The default value for `static_discovery` depends
-        on the value of `discoveryServiceUrl`. `static_discovery` will default to
-        `True` when `discoveryServiceUrl` is also not provided, otherwise it will
-        default to `False`.
+        on the value of `discoveryServiceUrl` and `labels`. `static_discovery` will
+        default to `True` when both `discoveryServiceUrl` and `labels` are not
+        provided, otherwise it will default to `False`.
       always_use_jwt_access: Boolean, whether always use self signed JWT for service
         account credentials. This only applies to
         google.oauth2.service_account.Credentials.
@@ -333,6 +333,7 @@ def build(
                 developerKey,
                 num_retries=num_retries,
                 static_discovery=static_discovery,
+                labels=labels,
             )
             service = build_from_document(
                 content,
@@ -402,6 +403,7 @@ def _retrieve_discovery_doc(
     developerKey=None,
     num_retries=1,
     static_discovery=True,
+    labels=None,
 ):
     """Retrieves the discovery_doc from cache or the internet.
 
@@ -420,6 +422,7 @@ def _retrieve_discovery_doc(
         randomized exponential backoff in case of intermittent/connection issues.
       static_discovery: Boolean, whether or not to use the static discovery docs
         included in the library.
+      labels: list of strings, optional visibility labels to filter by.
 
     Returns:
       A unicode string representation of the discovery document.
@@ -437,7 +440,7 @@ def _retrieve_discovery_doc(
     # When `static_discovery=True`, use static discovery artifacts included
     # with the library
     if static_discovery:
-        content = discovery_cache.get_static_doc(serviceName, version)
+        content = discovery_cache.get_static_doc(serviceName, version, labels=labels)
         if content:
             return content
         else:
